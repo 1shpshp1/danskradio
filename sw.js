@@ -1,6 +1,6 @@
 // Caches the app shell so it opens instantly and offline. Radio streams and
 // the station directory always go to the network.
-const CACHE = "dansk-radio-v2";
+const CACHE = "dansk-radio-v3";
 const SHELL = ["./", "index.html", "manifest.webmanifest", "icons/apple-touch-icon.png", "icons/icon-192.png", "icons/icon-512.png"];
 
 self.addEventListener("install", e => {

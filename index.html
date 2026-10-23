@@ -44,6 +44,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html { padding-top: env(safe-area-inset-top, 0px); }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
@@ -56,9 +57,7 @@ body {
 
 header { padding-block: 32px 8px; display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; }
 .brand { display: flex; align-items: center; gap: 14px; }
-.flag { width: 44px; height: 32px; border-radius: 3px; background:
-  linear-gradient(90deg, transparent 12px, #fff 12px, #fff 18px, transparent 18px),
-  linear-gradient(0deg, transparent 13px, #fff 13px, #fff 19px, transparent 19px), #c8102e; flex: none; }
+.logo { width: 44px; height: 44px; border-radius: 10px; flex: none; display: block; }
 h1 { font: 700 2.1rem/1 var(--display); margin: 0; letter-spacing: -0.02em; }
 .tag { color: var(--muted); margin: 4px 0 0; font-size: .9rem; }
 
@@ -143,7 +142,7 @@ h2 { font: 600 .75rem/1 var(--body); text-transform: uppercase; letter-spacing: 
 <div class="wrap">
   <header>
     <div class="brand">
-      <div class="flag" aria-hidden="true"></div>
+      <img class="logo" src="icons/icon-192.png" width="44" height="44" alt="">
       <div>
         <h1>Dansk Radio</h1>
         <p class="tag">Direkte fra danske radiostationer</p>
