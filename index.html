@@ -4,6 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Dansk Radio</title>
+<meta name="description" content="Lyt til danske radiostationer direkte.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Dansk Radio">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#eef0f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0f1318" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -91,6 +101,15 @@ h2 { font: 600 .75rem/1 var(--body); text-transform: uppercase; letter-spacing: 
 .eq i:nth-child(2) { animation-delay: .2s; } .eq i:nth-child(3) { animation-delay: .4s; }
 @keyframes eq { 0%,100% { height: 3px } 50% { height: 14px } }
 
+.hint {
+  margin-top: 16px; display: flex; gap: 12px; align-items: start;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font-size: .9rem;
+}
+.hint p { margin: 0; flex: 1; min-width: 0; }
+.hint b { font-weight: 600; }
+.hint svg { vertical-align: -3px; color: #0a84ff; }
+.hint button { background: none; border: 0; color: var(--muted); font-size: 1.2rem; line-height: 1; padding: 2px 4px; cursor: pointer; border-radius: 6px; }
+.hint button:focus-visible { outline: 2px solid var(--red); }
 .empty { color: var(--muted); font-size: .9rem; padding: 14px; border: 1px dashed var(--line); border-radius: 10px; }
 .note { color: var(--muted); font-size: .85rem; margin-top: 8px; }
 
@@ -135,6 +154,13 @@ h2 { font: 600 .75rem/1 var(--body); text-transform: uppercase; letter-spacing: 
       <input id="q" type="search" placeholder="Søg efter stationer…" autocomplete="off" aria-label="Søg efter stationer">
     </label>
   </header>
+
+  <div class="hint" id="hint" hidden>
+    <p><b>Installér på din iPhone:</b> tryk på Del
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-label="Del-knappen"><path d="M12 3v12M8 7l4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>
+      nederst i Safari, og vælg <b>Føj til hjemmeskærm</b>.</p>
+    <button id="hintX" aria-label="Luk">×</button>
+  </div>
 
   <main id="main"></main>
 </div>
@@ -388,6 +414,17 @@ q.addEventListener("input", () => {
 const last = byId(store.get("last", ""));
 if (last) { current = last; audio.src = last.url; $("#nowT").textContent = last.name; $("#play").disabled = false; status("Tryk på afspil for at fortsætte"); }
 render();
+
+// iPhone install hint: only in Safari on iOS, and not once installed.
+const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const standalone = navigator.standalone || matchMedia("(display-mode: standalone)").matches;
+if (ios && !standalone && !store.get("hintClosed", false)) $("#hint").hidden = false;
+// iOS ignores audio.volume (the phone's buttons control it) and has no keyboard shortcuts.
+if (ios) $(".vol").hidden = true;
+if (matchMedia("(pointer: coarse)").matches && !current) status("Tryk på en station for at lytte");
+$("#hintX").addEventListener("click", () => { $("#hint").hidden = true; store.set("hintClosed", true); });
+
+if ("serviceWorker" in navigator && isSecureContext && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(() => {});
 </script>
 </body>
 </html>
