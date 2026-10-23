@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dansk Radio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a tuner. Station "presets" in grouped grids, a fixed receiver bar along the bottom. */
+:root {
+  --bg: #eef0f2;
+  --surface: #ffffff;
+  --ink: #15191f;
+  --muted: #5d6672;
+  --line: #d6dbe1;
+  --red: #c8102e;
+  --red-soft: #fbe7ea;
+  --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1318; --surface: #181d24; --ink: #e8ebef; --muted: #98a2ae;
+    --line: #2a313b; --red: #ff4d63; --red-soft: #3a1820; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1318; --surface: #181d24; --ink: #e8ebef; --muted: #98a2ae;
+  --line: #2a313b; --red: #ff4d63; --red-soft: #3a1820; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { padding-top: env(safe-area-inset-top, 0px); }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.5 var(--body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+}
+.wrap { max-width: 1040px; margin: 0 auto; }
+
+header { padding-block: 32px 8px; display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; }
+.brand { display: flex; align-items: center; gap: 14px; }
+.flag { width: 44px; height: 32px; border-radius: 3px; background:
+  linear-gradient(90deg, transparent 12px, #fff 12px, #fff 18px, transparent 18px),
+  linear-gradient(0deg, transparent 13px, #fff 13px, #fff 19px, transparent 19px), #c8102e; flex: none; }
+h1 { font: 700 2.1rem/1 var(--display); margin: 0; letter-spacing: -0.02em; }
+.tag { color: var(--muted); margin: 4px 0 0; font-size: .9rem; }
+
+.search { flex: 1 1 260px; max-width: 360px; position: relative; }
+.search input {
+  width: 100%; font: inherit; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 999px; padding: 10px 16px 10px 38px;
+}
+.search input:focus { outline: 2px solid var(--red); outline-offset: 1px; }
+.search svg { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+
+section { margin-top: 28px; }
+.sec-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+h2 { font: 600 .75rem/1 var(--body); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 0; }
+.sec-head span { font: .75rem var(--mono); color: var(--muted); }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.st {
+  display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 12px;
+  text-align: left; font: inherit; color: inherit; cursor: pointer;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+  transition: border-color .15s, transform .15s;
+}
+.st:hover { border-color: var(--muted); }
+.st:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+.st.on { border-color: var(--red); background: var(--red-soft); }
+.badge {
+  width: 44px; height: 44px; border-radius: 8px; display: grid; place-items: center;
+  font: 700 .95rem/1 var(--display); color: #fff; letter-spacing: -0.02em;
+}
+.st .nm { font-weight: 600; line-height: 1.25; min-width: 0; }
+.st .sub { display: block; font-weight: 400; font-size: .8rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fav { background: none; border: 0; padding: 6px; cursor: pointer; color: var(--line); font-size: 1.1rem; line-height: 1; border-radius: 6px; }
+.fav:hover { color: var(--muted); }
+.fav.is { color: var(--red); }
+.fav:focus-visible { outline: 2px solid var(--red); }
+.eq { display: none; gap: 2px; align-items: end; height: 14px; }
+.st.on.playing .eq { display: inline-flex; }
+.eq i { width: 3px; background: var(--red); animation: eq .9s ease-in-out infinite; }
+.eq i:nth-child(2) { animation-delay: .2s; } .eq i:nth-child(3) { animation-delay: .4s; }
+@keyframes eq { 0%,100% { height: 3px } 50% { height: 14px } }
+
+.empty { color: var(--muted); font-size: .9rem; padding: 14px; border: 1px dashed var(--line); border-radius: 10px; }
+.note { color: var(--muted); font-size: .85rem; margin-top: 8px; }
+
+/* receiver bar */
+.bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
+  background: var(--surface); border-top: 1px solid var(--line);
+  padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.bar-in { max-width: 1040px; margin: 0 auto; display: flex; align-items: center; gap: 14px; }
+.play {
+  width: 52px; height: 52px; border-radius: 50%; border: 0; background: var(--red); color: #fff;
+  display: grid; place-items: center; cursor: pointer; flex: none;
+}
+.play:disabled { opacity: .4; cursor: default; }
+.play:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+.now { flex: 1; min-width: 0; }
+.now .t { font: 700 1.1rem/1.2 var(--display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.now .s { font: .78rem var(--mono); color: var(--muted); display: flex; gap: 10px; align-items: center; white-space: nowrap; overflow: hidden; }
+.live { color: var(--red); font-weight: 500; display: inline-flex; align-items: center; gap: 5px; }
+.live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: pulse 1.6s infinite; }
+@keyframes pulse { 50% { opacity: .25 } }
+.vol { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+.vol input { width: 110px; accent-color: var(--red); }
+.timer { font: .78rem var(--mono); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 6px; }
+@media (max-width: 560px) { .vol input { width: 70px; } .timer { display: none; } h1 { font-size: 1.7rem; } }
+@media (prefers-reduced-motion: reduce) { .eq i, .live::before { animation: none; } .eq i { height: 10px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="flag" aria-hidden="true"></div>
+      <div>
+        <h1>Dansk Radio</h1>
+        <p class="tag">Direkte fra danske radiostationer</p>
+      </div>
+    </div>
+    <label class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="Søg efter stationer…" autocomplete="off" aria-label="Søg efter stationer">
+    </label>
+  </header>
+
+  <main id="main"></main>
+</div>
+
+<div class="bar" role="region" aria-label="Afspiller">
+  <div class="bar-in">
+    <button class="play" id="play" disabled aria-label="Afspil">
+      <svg id="ico" width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+    <div class="now">
+      <div class="t" id="nowT">Vælg en station</div>
+      <div class="s" id="nowS">Mellemrum afspiller/pauser · ←/→ skifter station</div>
+    </div>
+    <select class="timer" id="sleep" aria-label="Sluk automatisk">
+      <option value="0">Sluk: fra</option>
+      <option value="15">15 min</option>
+      <option value="30">30 min</option>
+      <option value="60">60 min</option>
+      <option value="90">90 min</option>
+    </select>
+    <label class="vol">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 10v4h4l5 4V6L7 10H3zm13.5 2A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4z"/></svg>
+      <input id="vol" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Lydstyrke">
+    </label>
+  </div>
+</div>
+
+<audio id="audio" preload="none"></audio>
+
+<script>
+const DR = "#c8102e", P4 = "#9b1b30";
+const STATIONS = [
+  // DR national
+  { id: "p1", name: "DR P1", sub: "Debat, nyheder og samfund", group: "DR", short: "P1", color: "#2b5c8a", url: "https://live-icy.dr.dk/A/A03H.mp3" },
+  { id: "p2", name: "DR P2", sub: "Klassisk musik", group: "DR", short: "P2", color: "#5b3f8c", url: "https://live-icy.dr.dk/A/A04H.mp3" },
+  { id: "p3", name: "DR P3", sub: "Pop og ny musik", group: "DR", short: "P3", color: "#0d8c6a", url: "https://live-icy.dr.dk/A/A05H.mp3" },
+  { id: "p5", name: "DR P5", sub: "Danske klassikere og oldies", group: "DR", short: "P5", color: "#b8611a", url: "https://live-icy.dr.dk/A/A25H.mp3" },
+  { id: "p6", name: "DR P6 Beat", sub: "Alternativ og indie", group: "DR", short: "P6", color: "#1c1c1c", url: "https://live-icy.dr.dk/A/A29H.mp3" },
+  { id: "p8", name: "DR P8 Jazz", sub: "Jazz døgnet rundt", group: "DR", short: "P8", color: "#7a5a2f", url: "https://live-icy.dr.dk/A/A22H.mp3" },
+  // DR P4 regional
+  { id: "p4kbh", name: "P4 København", sub: "Storkøbenhavn", group: "P4", short: "P4", color: P4, url: "https://live-icy.dr.dk/A/A08H.mp3" },
+  { id: "p4sj", name: "P4 Sjælland", sub: "Sjælland", group: "P4", short: "P4", color: P4, url: "https://live-icy.dr.dk/A/A11H.mp3" },
+  { id: "p4fyn", name: "P4 Fyn", sub: "Fyn", group: "P4", short: "P4", color: P4, url: "https://live-icy.dr.dk/A/A07H.mp3" },
+  { id: "p4syd", name: "P4 Syd", sub: "Sønderjylland", group: "P4", short: "P4", color: P4, url: "https://live-icy.dr.dk/A/A12H.mp3" },
+  { id: "p4tre", name: "P4 Trekanten", sub: "Trekantområdet", group: "P4", short: "P4", color: P4, url: "https://live-icy.dr.dk/A/A13H.mp3" },
+  { id: "p4oj", name: "P4 Østjylland", sub: "Østjylland", group: "P4", short: "P4", color: P4, url: "https://live-icy.dr.dk/A/A14H.mp3" },
+  { id: "p4mv", name: "P4 Midt & Vest", sub: "Midt- og Vestjylland", group: "P4", short: "P4", color: P4, url: "https://live-icy.dr.dk/A/A09H.mp3" },
+  { id: "p4nj", name: "P4 Nordjylland", sub: "Nordjylland", group: "P4", short: "P4", color: P4, url: "https://live-icy.dr.dk/A/A10H.mp3" },
+  // Commercial
+  { id: "nova", name: "Nova", sub: "Hits", group: "COM", short: "NO", color: "#e6007e", url: "https://live-bauerdk.sharp-stream.com/nova_dk_mp3" },
+  { id: "voice", name: "The Voice", sub: "Danmarks hitstation", group: "COM", short: "TV", color: "#111111", url: "https://live-bauerdk.sharp-stream.com/thevoice_dk_mp3" },
+  { id: "r100", name: "Radio 100", sub: "Pop- og rockhits", group: "COM", short: "100", color: "#e2001a", url: "https://live-bauerdk.sharp-stream.com/radio100_dk_mp3" },
+  { id: "popfm", name: "POP FM", sub: "Pop fra fire årtier", group: "COM", short: "POP", color: "#f39200", url: "https://live-bauerdk.sharp-stream.com/popfm128.mp3" },
+  { id: "myrock", name: "myROCK", sub: "Rock", group: "COM", short: "ROC", color: "#3a3a3a", url: "https://live-bauerdk.sharp-stream.com/myrock_dk_mp3" },
+  { id: "soft", name: "Radio Soft", sub: "Blød pop", group: "COM", short: "SFT", color: "#4f8fbf", url: "https://live-bauerdk.sharp-stream.com/radiosoft_dk_mp3" },
+  { id: "radio4", name: "Radio4", sub: "Nyheder og debat", group: "COM", short: "R4", color: "#005a9c", url: "https://netradio.radio4.dk/radio4" },
+  // Local & niche
+  { id: "classicrock", name: "Classic Rock Danmark", sub: "Klassisk og hård rock", group: "LOC", short: "CR", color: "#6b2d1a", url: "https://netradio.classicfm.dk/classicrock" },
+  { id: "classicfm", name: "Classic FM", sub: "Hits fra 70'erne, 80'erne og 90'erne", group: "LOC", short: "CFM", color: "#26467a", url: "https://webradio.classicfm.dk/classichorsens" },
+  { id: "dansktop", name: "Dansktop Kanalen", sub: "Dansktop", group: "LOC", short: "DT", color: "#b0466a", url: "https://netradio.classicfm.dk/dansktop" },
+  { id: "skala", name: "Skala FM", sub: "Hits · Kolding", group: "LOC", short: "SK", color: "#1d7f8c", url: "https://webradio.skala.fm/kolding" },
+  { id: "abc", name: "Radio ABC", sub: "Pop · Randers", group: "LOC", short: "ABC", color: "#d0312d", url: "https://radioserver.dk/abc" },
+  { id: "partyfm", name: "PartyFM", sub: "Klub og fest · 320 kbps", group: "LOC", short: "PTY", color: "#7b2ff2", url: "https://stream.partyfm.dk/Party320/" },
+];
+const GROUPS = [
+  ["FAV", "Favoritter"],
+  ["DR", "DR · Landsdækkende"],
+  ["P4", "DR P4 · Regional"],
+  ["COM", "Kommercielle"],
+  ["LOC", "Lokale og nichekanaler"],
+];
+
+const $ = s => document.querySelector(s);
+const audio = $("#audio"), main = $("#main"), q = $("#q");
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("dkradio:" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("dkradio:" + k, JSON.stringify(v)); } catch {} },
+};
+let favs = new Set(store.get("favs", []));
+let extra = [];           // results from the Radio Browser directory
+let current = null, playing = false, searchTimer = null, sleepTimer = null;
+
+audio.volume = store.get("vol", 0.8);
+$("#vol").value = audio.volume;
+
+function esc(s) { return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
+function abbrev(name) {
+  const w = name.replace(/^(radio|dr)\s+/i, "").split(/\s+/).filter(Boolean);
+  return (w.length > 1 ? w.slice(0, 2).map(x => x[0]).join("") : (w[0] || "?").slice(0, 3)).toUpperCase();
+}
+function card(st) {
+  const on = current && current.id === st.id;
+  return `<div class="st${on ? " on" : ""}${on && playing ? " playing" : ""}" role="button" tabindex="0" data-id="${esc(st.id)}" aria-label="Afspil ${esc(st.name)}">
+    <div class="badge" style="background:${st.color}">${esc(st.short)}</div>
+    <div class="nm">${esc(st.name)}<span class="sub">${esc(st.sub)}</span></div>
+    <div style="display:flex;align-items:center;gap:4px">
+      <span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>
+      <button class="fav${favs.has(st.id) ? " is" : ""}" data-fav="${esc(st.id)}" aria-label="${favs.has(st.id) ? "Fjern fra" : "Føj til"} favoritter" title="Favorit">★</button>
+    </div>
+  </div>`;
+}
+const all = () => STATIONS.concat(extra);
+const byId = id => all().find(s => s.id === id) || store.get("x:" + id, null);
+
+function visibleList() {
+  const term = q.value.trim().toLowerCase();
+  const match = s => !term || (s.name + " " + s.sub).toLowerCase().includes(term);
+  const out = [];
+  for (const [g, label] of GROUPS) {
+    let list = g === "FAV" ? [...favs].map(byId).filter(Boolean) : STATIONS.filter(s => s.group === g);
+    list = list.filter(match);
+    if (g === "FAV" && !list.length && term) continue;
+    if (g !== "FAV" && !list.length) continue;
+    out.push([g, label, list]);
+  }
+  if (term) out.push(["DIR", "Flere danske stationer", extra]);
+  return out;
+}
+function render() {
+  const term = q.value.trim();
+  main.innerHTML = visibleList().map(([g, label, list]) => {
+    let body;
+    if (g === "FAV" && !list.length) body = `<div class="empty">Tryk på ★ ved en station for at gemme den her.</div>`;
+    else if (g === "DIR" && !list.length) body = `<div class="empty">${searchTimer ? "Søger i stationsoversigten…" : `Ingen andre danske stationer matcher „${esc(term)}“.`}</div>`;
+    else body = `<div class="grid">${list.map(card).join("")}</div>`;
+    const note = g === "DIR" ? `<p class="note">Fra den åbne stationsoversigt på radio-browser.info. Nogle streams kan være offline.</p>` : "";
+    return `<section><div class="sec-head"><h2>${label}</h2><span>${list.length || ""}</span></div>${body}${note}</section>`;
+  }).join("");
+}
+
+function setIcon() {
+  $("#ico").innerHTML = playing ? '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
+  $("#play").setAttribute("aria-label", playing ? "Pause" : "Afspil");
+}
+function status(html) { $("#nowS").innerHTML = html; }
+
+function tune(st) {
+  if (current && current.id === st.id) return toggle();
+  current = st;
+  store.set("last", st.id);
+  if (st.group === "DIR") store.set("x:" + st.id, st);
+  audio.src = st.url;
+  $("#nowT").textContent = st.name;
+  $("#play").disabled = false;
+  status("Stiller ind…");
+  start();
+  if ("mediaSession" in navigator) {
+    navigator.mediaSession.metadata = new MediaMetadata({ title: st.name, artist: st.sub, album: "Dansk Radio" });
+  }
+}
+function start() {
+  if (!current) return;
+  // Reload the live stream so resuming jumps to "now" instead of replaying a stale buffer.
+  if (audio.src !== current.url || audio.ended || audio.readyState === 0) audio.src = current.url;
+  else audio.load();
+  audio.play().catch(err => { if (err.name !== "AbortError") fail(); });
+}
+function toggle() {
+  if (!current) return;
+  if (playing) { audio.pause(); } else { status("Stiller ind…"); start(); }
+}
+function fail() {
+  playing = false; setIcon(); render();
+  status(`<span>Streamen svarer ikke lige nu. Prøv igen, eller vælg en anden station.</span>`);
+}
+function step(dir) {
+  const list = visibleList().flatMap(([, , l]) => l).filter((s, i, a) => a.findIndex(x => x.id === s.id) === i);
+  if (!list.length) return;
+  const i = current ? list.findIndex(s => s.id === current.id) : -1;
+  tune(list[(i + dir + list.length) % list.length]);
+}
+
+audio.addEventListener("playing", () => {
+  playing = true; setIcon(); render();
+  status(`<span class="live">DIREKTE</span><span>${esc(current.sub)}</span>`);
+});
+audio.addEventListener("pause", () => {
+  playing = false; setIcon(); render();
+  if (current) status("Sat på pause");
+});
+audio.addEventListener("waiting", () => { if (playing) status("Indlæser…"); });
+audio.addEventListener("error", () => { if (current && audio.src) fail(); });
+
+main.addEventListener("click", e => {
+  const f = e.target.closest("[data-fav]");
+  if (f) {
+    e.stopPropagation();
+    const id = f.dataset.fav;
+    if (favs.has(id)) favs.delete(id); else { favs.add(id); const s = byId(id); if (s && s.group === "DIR") store.set("x:" + id, s); }
+    store.set("favs", [...favs]); render(); return;
+  }
+  const c = e.target.closest("[data-id]");
+  if (c) tune(byId(c.dataset.id));
+});
+main.addEventListener("keydown", e => {
+  if ((e.key === "Enter" || e.key === " ") && e.target.matches("[data-id]")) { e.preventDefault(); tune(byId(e.target.dataset.id)); }
+});
+$("#play").addEventListener("click", toggle);
+$("#vol").addEventListener("input", e => { audio.volume = +e.target.value; store.set("vol", audio.volume); });
+$("#sleep").addEventListener("change", e => {
+  clearTimeout(sleepTimer);
+  const min = +e.target.value;
+  if (min) sleepTimer = setTimeout(() => { audio.pause(); e.target.value = "0"; }, min * 60000);
+});
+document.addEventListener("keydown", e => {
+  if (e.target.matches("input, select, [data-id], button")) return;
+  if (e.key === " ") { e.preventDefault(); toggle(); }
+  if (e.key === "ArrowRight") step(1);
+  if (e.key === "ArrowLeft") step(-1);
+});
+if ("mediaSession" in navigator) {
+  navigator.mediaSession.setActionHandler("play", toggle);
+  navigator.mediaSession.setActionHandler("pause", toggle);
+  navigator.mediaSession.setActionHandler("nexttrack", () => step(1));
+  navigator.mediaSession.setActionHandler("previoustrack", () => step(-1));
+}
+
+// Search the Radio Browser directory for Danish stations not in the preset list.
+const known = new Set(STATIONS.map(s => s.url.replace(/^https?:\/\//, "").replace(/\/$/, "")));
+const norm = n => n.toLowerCase().replace(/^(danmarks radio|dr)\s+/, "").replace(/\(.*?\)/g, "").replace(/[^a-zæøå0-9]/g, "");
+const knownNames = new Set(STATIONS.map(s => norm(s.name)));
+q.addEventListener("input", () => {
+  clearTimeout(searchTimer);
+  extra = [];
+  const term = q.value.trim();
+  if (term.length < 2) { searchTimer = null; render(); return; }
+  searchTimer = setTimeout(async () => {
+    try {
+      const url = "https://de1.api.radio-browser.info/json/stations/search?countrycode=DK&hidebroken=true&order=clickcount&reverse=true&limit=40&name=" + encodeURIComponent(term);
+      const res = await fetch(url);
+      const data = await res.json();
+      if (q.value.trim() !== term) return;
+      const seen = new Set();
+      extra = data.filter(s => {
+        const key = s.url_resolved.replace(/^https?:\/\//, "").replace(/\/$/, "");
+        if (known.has(key) || knownNames.has(norm(s.name)) || seen.has(key) || /\.m3u8?($|\?)|\.pls($|\?)/i.test(key)) return false;
+        seen.add(key); return true;
+      }).slice(0, 24).map(s => ({
+        id: "rb-" + s.stationuuid, name: s.name.trim(), group: "DIR",
+        sub: [s.tags.split(",").slice(0, 2).join(", "), s.bitrate ? s.bitrate + " kbps" : ""].filter(Boolean).join(" · ") || "Dansk station",
+        short: abbrev(s.name), color: "#4a5563", url: s.url_resolved,
+      }));
+    } catch { extra = []; }
+    searchTimer = null;
+    render();
+  }, 350);
+  render();
+});
+
+// Restore the last station (paused; browsers only allow sound after a tap).
+const last = byId(store.get("last", ""));
+if (last) { current = last; audio.src = last.url; $("#nowT").textContent = last.name; $("#play").disabled = false; status("Tryk på afspil for at fortsætte"); }
+render();
+</script>
+</body>
+</html>
